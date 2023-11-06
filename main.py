@@ -17,7 +17,14 @@ def load_data(id=17):
     return X, y
 
 
+def load_data(id=17):
+    data = fetch_ucirepo(id=id)
+    X = data.data.features
+    y = data.data.targets
+    return X, y
+
 X, y = load_data()
+
 # analyzer = DataAnalyzer(X, y)
 #
 # analyzer.correlation_matrix()
@@ -30,14 +37,15 @@ num_iterations = 50
 
 model = Pipeline(steps=[
     ('scaler', MinMaxScaler()),
-    ('aco_featureselection', FeatureSelectionACO(clf, X, y, num_ants, num_iterations)),
+    ('aco_featureselection', FeatureSelectionACO(clf, X.shape[1], num_ants, num_iterations)),
     ('clf_SVC', clf)
 ])
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # treinando o modelo
-model.fit(X_train, y_train)
+model.fit(X_train, np.ravel(y_train))
+
 train_score = model.score(X_train, y_train)
 
 # avaliando o modelo
