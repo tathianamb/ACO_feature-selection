@@ -5,13 +5,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class FeatureSelectionACO(BaseEstimator, TransformerMixin):
-    def __init__(self, clf, X, y, num_ants, num_iterations):
+    def __init__(self, clf, num_features, num_ants, num_iterations):
         self.clf = clf
-        self.X = X
-        self.y = y
         self.num_ants = num_ants
         self.num_iterations = num_iterations
-        self.num_features = X.shape[1]
+        self.num_features = num_features
         self.pheromone = np.ones(self.num_features)
         self.best_accuracy = 0.0
         self.best_selected_features = []
@@ -22,8 +20,8 @@ class FeatureSelectionACO(BaseEstimator, TransformerMixin):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
         if not features:
             return 0.0
-        self.clf.fit(X_train.iloc[:, features], y_train)
-        y_pred = self.clf.predict(X_test.iloc[:, features])
+        self.clf.fit(X_train[:, features], np.ravel(y_train))
+        y_pred = self.clf.predict(X_test[:, features])
         return accuracy_score(y_test, y_pred)
 
     def generate_solution(self):
@@ -43,6 +41,8 @@ class FeatureSelectionACO(BaseEstimator, TransformerMixin):
             self.best_selected_features = solution
 
     def fit(self, X, y, **fit_params):
+        self.X = X
+        self.y = y
         for iteration in range(self.num_iterations):
             for ant in range(self.num_ants):
                 solution = self.generate_solution()
@@ -55,5 +55,5 @@ class FeatureSelectionACO(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self):
-        return self.X[self.best_selected_features]
+    def transform(self, X):
+        return X[:, self.best_selected_features]
